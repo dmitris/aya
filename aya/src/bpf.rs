@@ -8,7 +8,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use log::debug;
+// use log::debug;
 use thiserror::Error;
 
 use crate::{
@@ -103,35 +103,35 @@ pub(crate) struct Features {
 impl Features {
     fn probe_features(&mut self) {
         self.bpf_name = is_prog_name_supported();
-        debug!("[FEAT PROBE] BPF program name support: {}", self.bpf_name);
+        // debug!("[FEAT PROBE] BPF program name support: {}", self.bpf_name);
 
         self.btf = is_btf_supported();
-        debug!("[FEAT PROBE] BTF support: {}", self.btf);
+        // debug!("[FEAT PROBE] BTF support: {}", self.btf);
 
         if self.btf {
             self.btf_func = is_btf_func_supported();
-            debug!("[FEAT PROBE] BTF func support: {}", self.btf_func);
+            // debug!("[FEAT PROBE] BTF func support: {}", self.btf_func);
 
             self.btf_func_global = is_btf_func_global_supported();
-            debug!(
-                "[FEAT PROBE] BTF global func support: {}",
-                self.btf_func_global
-            );
+            // debug!(
+            //     "[FEAT PROBE] BTF global func support: {}",
+            //    self.btf_func_global
+            // );
 
             self.btf_datasec = is_btf_datasec_supported();
-            debug!(
+            /* debug!(
                 "[FEAT PROBE] BTF var and datasec support: {}",
                 self.btf_datasec
-            );
+            ); */
 
             self.btf_float = is_btf_float_supported();
-            debug!("[FEAT PROBE] BTF float support: {}", self.btf_float);
+            // debug!("[FEAT PROBE] BTF float support: {}", self.btf_float);
 
             self.btf_decl_tag = is_btf_decl_tag_supported();
-            debug!("[FEAT PROBE] BTF decl_tag support: {}", self.btf_decl_tag);
+            // debug!("[FEAT PROBE] BTF decl_tag support: {}", self.btf_decl_tag);
 
             self.btf_type_tag = is_btf_type_tag_supported();
-            debug!("[FEAT PROBE] BTF type_tag support: {}", self.btf_type_tag);
+            // debug!("[FEAT PROBE] BTF type_tag support: {}", self.btf_type_tag);
         }
     }
 }

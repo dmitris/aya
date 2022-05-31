@@ -267,7 +267,7 @@ impl<'a> FunctionLinker<'a> {
     fn relocate(&mut self, program: &mut Function, fun: &Function) -> Result<(), RelocationError> {
         let relocations = self.relocations.get(&fun.section_index);
 
-        debug!("relocating program {} function {}", program.name, fun.name);
+        // debug!("relocating program {} function {}", program.name, fun.name);
 
         let n_instructions = fun.instructions.len();
         let start_ins = program.instructions.len() - n_instructions;
@@ -360,10 +360,10 @@ impl<'a> FunctionLinker<'a> {
             }
         }
 
-        debug!(
+        /* debug!(
             "finished relocating program {} function {}",
             program.name, fun.name
-        );
+        ); */
 
         Ok(())
     }
