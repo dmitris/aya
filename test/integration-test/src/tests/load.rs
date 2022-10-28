@@ -10,12 +10,12 @@ use aya::{
     Bpf,
 };
 
-use super::{integration_test, integration_test_new, IntegrationTest, IntegrationTestNew};
+use super::{integration_test, IntegrationTest};
 
 const MAX_RETRIES: u32 = 100;
 const RETRY_DURATION_MS: u64 = 10;
 
-#[integration_test_new]
+#[integration_test]
 fn long_name() {
     let bytes = include_bytes_aligned!("../../../../target/bpfel-unknown-none/debug/name_test");
     let mut bpf = Bpf::load(bytes).unwrap();
@@ -29,13 +29,13 @@ fn long_name() {
 }
 
 #[integration_test]
-fn multiple_btf_maps() -> anyhow::Result<()> {
+fn multiple_btf_maps()  {
     let bytes =
         include_bytes_aligned!("../../../../target/bpfel-unknown-none/debug/multimap-btf.bpf.o");
-    let mut bpf = Bpf::load(bytes)?;
+    let mut bpf = Bpf::load(bytes).unwrap();
 
-    let map_1: Array<_, u64> = bpf.take_map("map_1").unwrap().try_into()?;
-    let map_2: Array<_, u64> = bpf.take_map("map_2").unwrap().try_into()?;
+    let map_1: Array<_, u64> = bpf.take_map("map_1").unwrap().try_into().unwrap();
+    let map_2: Array<_, u64> = bpf.take_map("map_2").unwrap().try_into().unwrap();
 
     let prog: &mut TracePoint = bpf.program_mut("tracepoint").unwrap().try_into().unwrap();
     prog.load().unwrap();
@@ -44,13 +44,11 @@ fn multiple_btf_maps() -> anyhow::Result<()> {
     thread::sleep(time::Duration::from_secs(3));
 
     let key = 0;
-    let val_1 = map_1.get(&key, 0)?;
-    let val_2 = map_2.get(&key, 0)?;
+    let val_1 = map_1.get(&key, 0).unwrap();
+    let val_2 = map_2.get(&key, 0).unwrap();
 
     assert_eq!(val_1, 24);
     assert_eq!(val_2, 42);
-
-    Ok(())
 }
 
 fn is_loaded(name: &str) -> bool {
@@ -79,9 +77,9 @@ macro_rules! assert_loaded {
 }
 
 #[integration_test]
-fn unload() -> anyhow::Result<()> {
+fn unload() {
     let bytes = include_bytes_aligned!("../../../../target/bpfel-unknown-none/debug/test");
-    let mut bpf = Bpf::load(bytes)?;
+    let mut bpf = Bpf::load(bytes).unwrap();
     let prog: &mut Xdp = bpf.program_mut("test_unload").unwrap().try_into().unwrap();
     prog.load().unwrap();
     let link = prog.attach("lo", XdpFlags::default()).unwrap();
@@ -101,38 +99,35 @@ fn unload() -> anyhow::Result<()> {
     prog.unload().unwrap();
 
     assert_loaded!("test_unload", false);
-    Ok(())
 }
 
 #[integration_test]
-fn pin_link() -> anyhow::Result<()> {
+fn pin_link() {
     let bytes = include_bytes_aligned!("../../../../target/bpfel-unknown-none/debug/test");
-    let mut bpf = Bpf::load(bytes)?;
+    let mut bpf = Bpf::load(bytes).unwrap();
     let prog: &mut Xdp = bpf.program_mut("test_unload").unwrap().try_into().unwrap();
     prog.load().unwrap();
     let link_id = prog.attach("lo", XdpFlags::default()).unwrap();
-    let link = prog.take_link(link_id)?;
+    let link = prog.take_link(link_id).unwrap();
     assert_loaded!("test_unload", true);
 
-    let fd_link: FdLink = link.try_into()?;
-    let pinned = fd_link.pin("/sys/fs/bpf/aya-xdp-test-lo")?;
+    let fd_link: FdLink = link.try_into().unwrap();
+    let pinned = fd_link.pin("/sys/fs/bpf/aya-xdp-test-lo").unwrap();
 
     // because of the pin, the program is still attached
-    prog.unload()?;
+    prog.unload().unwrap();
     assert_loaded!("test_unload", true);
 
     // delete the pin, but the program is still attached
-    let new_link = pinned.unpin()?;
+    let new_link = pinned.unpin().unwrap();
     assert_loaded!("test_unload", true);
 
     // finally when new_link is dropped we're detached
     drop(new_link);
     assert_loaded!("test_unload", false);
-
-    Ok(())
 }
 
-#[integration_test_new]
+#[integration_test]
 fn pin_lifecycle() {
     let bytes = include_bytes_aligned!("../../../../target/bpfel-unknown-none/debug/pass");
 
