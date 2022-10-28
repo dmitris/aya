@@ -30,10 +30,7 @@ enum Command {
 macro_rules! exec_test {
     ($test:expr) => {{
         info!("Running {}", $test.name);
-        if let Err(e) = ($test.test_fn)() {
-            println!("Error in {}: {}", $test.name, e);
-            panic!("{}", e)
-        }
+        ($test.test_fn)();
     }};
 }
 
