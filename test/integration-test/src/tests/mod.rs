@@ -15,6 +15,13 @@ pub struct IntegrationTest {
     pub test_fn: fn() -> anyhow::Result<()>,
 }
 
+pub use integration_test_macros::integration_test_new;
+#[derive(Debug)]
+pub struct IntegrationTestNew {
+    pub name: &'static str,
+    pub test_fn: fn(),
+}
+
 pub(crate) fn kernel_version() -> anyhow::Result<(u8, u8, u8)> {
     lazy_static! {
         static ref RE: Regex = Regex::new(r"^([0-9]+)\.([0-9]+)\.([0-9]+)").unwrap();
@@ -35,3 +42,4 @@ pub(crate) fn kernel_version() -> anyhow::Result<(u8, u8, u8)> {
 }
 
 inventory::collect!(IntegrationTest);
+inventory::collect!(IntegrationTestNew);
