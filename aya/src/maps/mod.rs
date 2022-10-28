@@ -818,7 +818,7 @@ impl<T: Pod> TryFrom<Vec<T>> for PerCpuValues<T> {
         if values.len() != nr_cpus {
             return Err(io::Error::new(
                 io::ErrorKind::InvalidInput,
-                format!("not enough values ({}), nr_cpus: {}", values.len(), nr_cpus),
+                format!("not enough values ({}), nr_cpus: {nr_cpus}", values.len()),
             ));
         }
         Ok(PerCpuValues {
