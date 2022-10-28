@@ -132,19 +132,19 @@ fn pin_link() -> anyhow::Result<()> {
     Ok(())
 }
 
-#[integration_test]
-fn pin_lifecycle() -> anyhow::Result<()> {
+#[integration_test_new]
+fn pin_lifecycle() {
     let bytes = include_bytes_aligned!("../../../../target/bpfel-unknown-none/debug/pass");
 
     // 1. Load Program and Pin
     {
-        let mut bpf = Bpf::load(bytes)?;
+        let mut bpf = Bpf::load(bytes).unwrap();
         let prog: &mut Xdp = bpf.program_mut("pass").unwrap().try_into().unwrap();
         prog.load().unwrap();
         let link_id = prog.attach("lo", XdpFlags::default()).unwrap();
-        let link = prog.take_link(link_id)?;
-        let fd_link: FdLink = link.try_into()?;
-        fd_link.pin("/sys/fs/bpf/aya-xdp-test-lo")?;
+        let link = prog.take_link(link_id).unwrap();
+        let fd_link: FdLink = link.try_into().unwrap();
+        fd_link.pin("/sys/fs/bpf/aya-xdp-test-lo").unwrap();
     }
 
     // should still be loaded since link was pinned
@@ -152,17 +152,15 @@ fn pin_lifecycle() -> anyhow::Result<()> {
 
     // 2. Load a new version of the program, unpin link, and atomically replace old program
     {
-        let mut bpf = Bpf::load(bytes)?;
+        let mut bpf = Bpf::load(bytes).unwrap();
         let prog: &mut Xdp = bpf.program_mut("pass").unwrap().try_into().unwrap();
         prog.load().unwrap();
 
-        let link = PinnedLink::from_pin("/sys/fs/bpf/aya-xdp-test-lo")?.unpin()?;
-        prog.attach_to_link(link.try_into()?)?;
+        let link = PinnedLink::from_pin("/sys/fs/bpf/aya-xdp-test-lo").unwrap().unpin().unwrap();
+        prog.attach_to_link(link.try_into().unwrap()).unwrap();
         assert_loaded!("pass", true);
     }
 
     // program should be unloaded
     assert_loaded!("pass", false);
-
-    Ok(())
 }
