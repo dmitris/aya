@@ -19,9 +19,13 @@ const RETRY_DURATION_MS: u64 = 10;
 fn long_name() {
     let bytes = include_bytes_aligned!("../../../../target/bpfel-unknown-none/debug/name_test");
     let mut bpf = Bpf::load(bytes).unwrap();
-    let name_prog: &mut Xdp = bpf.program_mut("ihaveaverylongname").unwrap().try_into().unwrap();
+    let name_prog: &mut Xdp = bpf
+        .program_mut("ihaveaverylongname")
+        .unwrap()
+        .try_into()
+        .unwrap();
     name_prog.load().unwrap();
-    name_prog.attach("lo", XdpFlags::default()).unwrap();
+    name_prog.attach("lo", XdpFlags::SKB_MODE).unwrap();
 
     // We used to be able to assert with bpftool that the program name was short.
     // It seem though that it now uses the name from the ELF symbol table instead.
@@ -29,7 +33,7 @@ fn long_name() {
 }
 
 #[integration_test]
-fn multiple_btf_maps()  {
+fn multiple_btf_maps() {
     let bytes =
         include_bytes_aligned!("../../../../target/bpfel-unknown-none/debug/multimap-btf.bpf.o");
     let mut bpf = Bpf::load(bytes).unwrap();
@@ -82,7 +86,7 @@ fn unload() {
     let mut bpf = Bpf::load(bytes).unwrap();
     let prog: &mut Xdp = bpf.program_mut("test_unload").unwrap().try_into().unwrap();
     prog.load().unwrap();
-    let link = prog.attach("lo", XdpFlags::default()).unwrap();
+    let link = prog.attach("lo", XdpFlags::SKB_MODE).unwrap();
     {
         let _link_owned = prog.take_link(link);
         prog.unload().unwrap();
@@ -93,7 +97,7 @@ fn unload() {
     prog.load().unwrap();
 
     assert_loaded!("test_unload", true);
-    prog.attach("lo", XdpFlags::default()).unwrap();
+    prog.attach("lo", XdpFlags::SKB_MODE).unwrap();
 
     assert_loaded!("test_unload", true);
     prog.unload().unwrap();
@@ -107,7 +111,7 @@ fn pin_link() {
     let mut bpf = Bpf::load(bytes).unwrap();
     let prog: &mut Xdp = bpf.program_mut("test_unload").unwrap().try_into().unwrap();
     prog.load().unwrap();
-    let link_id = prog.attach("lo", XdpFlags::default()).unwrap();
+    let link_id = prog.attach("lo", XdpFlags::SKB_MODE).unwrap();
     let link = prog.take_link(link_id).unwrap();
     assert_loaded!("test_unload", true);
 
@@ -136,8 +140,9 @@ fn pin_lifecycle() {
         let mut bpf = Bpf::load(bytes).unwrap();
         let prog: &mut Xdp = bpf.program_mut("pass").unwrap().try_into().unwrap();
         prog.load().unwrap();
-        let link_id = prog.attach("lo", XdpFlags::default()).unwrap();
+        let link_id = prog.attach("lo", XdpFlags::SKB_MODE).unwrap();
         let link = prog.take_link(link_id).unwrap();
+        println!("DMDEBUG link {:?}", link);
         let fd_link: FdLink = link.try_into().unwrap();
         fd_link.pin("/sys/fs/bpf/aya-xdp-test-lo").unwrap();
     }
@@ -151,7 +156,10 @@ fn pin_lifecycle() {
         let prog: &mut Xdp = bpf.program_mut("pass").unwrap().try_into().unwrap();
         prog.load().unwrap();
 
-        let link = PinnedLink::from_pin("/sys/fs/bpf/aya-xdp-test-lo").unwrap().unpin().unwrap();
+        let link = PinnedLink::from_pin("/sys/fs/bpf/aya-xdp-test-lo")
+            .unwrap()
+            .unpin()
+            .unwrap();
         prog.attach_to_link(link.try_into().unwrap()).unwrap();
         assert_loaded!("pass", true);
     }
