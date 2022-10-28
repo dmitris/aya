@@ -10,24 +10,22 @@ use aya::{
     Bpf,
 };
 
-use super::{integration_test, IntegrationTest};
+use super::{integration_test, integration_test_new, IntegrationTest, IntegrationTestNew};
 
 const MAX_RETRIES: u32 = 100;
 const RETRY_DURATION_MS: u64 = 10;
 
-#[integration_test]
-fn long_name() -> anyhow::Result<()> {
+#[integration_test_new]
+fn long_name() {
     let bytes = include_bytes_aligned!("../../../../target/bpfel-unknown-none/debug/name_test");
-    let mut bpf = Bpf::load(bytes)?;
-    let name_prog: &mut Xdp = bpf.program_mut("ihaveaverylongname").unwrap().try_into()?;
+    let mut bpf = Bpf::load(bytes).unwrap();
+    let name_prog: &mut Xdp = bpf.program_mut("ihaveaverylongname").unwrap().try_into().unwrap();
     name_prog.load().unwrap();
-    name_prog.attach("lo", XdpFlags::default())?;
+    name_prog.attach("lo", XdpFlags::default()).unwrap();
 
     // We used to be able to assert with bpftool that the program name was short.
     // It seem though that it now uses the name from the ELF symbol table instead.
     // Therefore, as long as we were able to load the program, this is good enough.
-
-    Ok(())
 }
 
 #[integration_test]
